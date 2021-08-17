@@ -12,7 +12,7 @@
     <script>
       // 设置奖品
       const prizes = []
-      let data = ['1元红包', '100元红包', '0.5元红包', '2元红包', '10元红包', '50元红包', '0.3元红包', '5元红包']
+      let data = ['焖面', '烤鸭', '盖饭', '驴肉火烧', '寿司', '熏肉大饼', '筋头巴脑', '万达的鸭货']
       data.forEach((item, index) => {
         prizes.push({
           title: item,
@@ -51,7 +51,7 @@
           }, 3000)
         },
         end (prize) {
-          alert(`恭喜你获得${prize.title}`)
+          alert(`恭喜你选中${prize.title}`)
         },
       })
     </script>
