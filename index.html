@@ -18,7 +18,7 @@ height:100vh;">
     const bg1 = '#d64737';
     const bg2 = '#e5cc96';
     const bg3 = '#f8d384';
-    let data = ['焖面', '烤鸭', '盖饭', '驴肉火烧', '寿司', '熏肉大饼', '筋头巴脑', '万达的鸭货']
+    let data = ['焖面', '烤鸭', '盖饭', '驴肉火烧', '寿司', '熏肉大饼', '筋头巴脑', '万达的鸭货', '万达的鸭货']
     data.forEach((item, index) => {
         prizes.push({
             title: item,
@@ -53,7 +53,7 @@ height:100vh;">
         start() {
             luckyWheel.play()
             setTimeout(() => {
-                luckyWheel.stop(Math.random() * 8 >> 0)
+                luckyWheel.stop(Math.random() * data.length >> 0)
             }, 3000)
         },
         end(prize) {
