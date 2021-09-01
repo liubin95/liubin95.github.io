@@ -74,6 +74,7 @@
                     {radius: '41px', background: '#f6c66f', pointer: true},
                     {
                         radius: '35px', background: '#ffdea0',
+                        imgs: [{src: './img/button.png', width: '65%', top: '-50%'}]
                     }
                 ],
                 dialogFormVisible: false
@@ -87,6 +88,7 @@
                 this.food_list.splice(index, 1);
             },
             save() {
+                this.food_list = this.food_list.filter(item => item);
                 this.getPrizesList();
                 this.dialogFormVisible = false;
             },
