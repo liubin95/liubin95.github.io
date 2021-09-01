@@ -4,62 +4,132 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>吃什么解决器</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <!-- 引入样式 -->
+    <link href="https://unpkg.com/element-ui/lib/theme-chalk/index.css" rel="stylesheet">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-luck-draw@3.4/dist/vue-luck-draw.umd.min.js"></script>
 </head>
-<body style="background-image: url(./img/memphis-colorful.png);
-display: flex;
-justify-content: center;
-align-items: center;
-height:100vh;">
-<div id="my-lucky"></div>
-<script src="https://cdn.jsdelivr.net/npm/lucky-canvas@1.4/dist/lucky-canvas.umd.min.js"></script>
-<script>
-    // 设置奖品
-    const prizes = []
-    const bg1 = '#d64737';
-    const bg2 = '#e5cc96';
-    const bg3 = '#f8d384';
-    let data = ['焖面', '烤鸭', '盖饭', '驴肉火烧', '寿司', '熏肉大饼', '筋头巴脑', '万达的鸭货', '万达的鸭货']
-    data.forEach((item, index) => {
-        prizes.push({
-            title: item,
-            background: index % 2 ? bg2 : bg3,
-            fonts: [{text: item, top: '10%'}],
-            imgs: [{src: `./img/${index}.png`, width: '30%', top: '35%'}],
-        })
-    })
-    // 创建大转盘抽奖
-    let luckyWheel = new LuckyCanvas.LuckyWheel({
-        el: '#my-lucky',
-        width: '300px',
-        height: '300px'
-    }, {
-        prizes: prizes,
-        defaultStyle: {
-            fontColor: bg1,
-            fontSize: '14px'
-        },
-        blocks: [
-            {padding: '13px', background: bg1}
-        ],
-        buttons: [
-            {radius: '50px', background: bg1},
-            {radius: '45px', background: '#fff'},
-            {radius: '41px', background: '#f6c66f', pointer: true},
-            {
-                radius: '35px', background: '#ffdea0',
-                imgs: [{src: './img/button.png', width: '65%', top: '-50%'}]
+<body style="background-image: url(./img/memphis-colorful.png);">
+<div id="app">
+    <div>
+        <lucky-wheel
+                :blocks="blocks"
+                :buttons="buttons"
+                :default-style="defaultStyle"
+                :prizes="prizes"
+                @end="endCallBack"
+                @start="startCallBack"
+                height="400px"
+                ref="LuckyWheel"
+                width="400px"
+        />
+    </div>
+    <div>
+        <br>
+        <br>
+        <!-- Button trigger modal -->
+        <el-button @click="dialogFormVisible = true" round type="primary">
+            自定义
+        </el-button>
+    </div>
+
+    <el-dialog :visible.sync="dialogFormVisible" center title="自定义选项" width="30%">
+        <el-scrollbar style="height:500px;">
+            <div :key="index" style="width: 60%;margin:1% auto;" v-for="(item, index) in food_list">
+                <el-input placeholder="请输入内容" v-model="food_list[index]">
+                    <template slot="append"><i @click="deleteItem(index)" class="el-icon-delete"></i></template>
+                </el-input>
+            </div>
+        </el-scrollbar>
+        <div style="width: 60%;margin:1% auto;">
+            <el-button @click="addItem()" icon="el-icon-plus" size="medium" style="width: 100%"></el-button>
+        </div>
+        <div class="dialog-footer" slot="footer">
+            <el-button @click="dialogFormVisible = false">取 消</el-button>
+            <el-button @click="save()" type="primary">确 定</el-button>
+        </div>
+    </el-dialog>
+</div>
+
+<script type="module">
+    const app = new Vue({
+        el: '#app',
+        data() {
+            return {
+                prizes: [],
+                food_list: ['焖面', '烤鸭', '盖饭', '驴肉火烧', '寿司', '熏肉大饼', '筋头巴脑', '万达的鸭货', '万达的鸭货'],
+                defaultStyle: {
+                    fontColor: '#d64737',
+                    fontSize: '14px'
+                },
+                blocks: [
+                    {padding: '13px', background: '#d64737'}
+                ],
+                buttons: [
+                    {radius: '50px', background: '#d64737'},
+                    {radius: '45px', background: '#fff'},
+                    {radius: '41px', background: '#f6c66f', pointer: true},
+                    {
+                        radius: '35px', background: '#ffdea0',
+                    }
+                ],
+                dialogFormVisible: false
             }
-        ],
-        start() {
-            luckyWheel.play()
-            setTimeout(() => {
-                luckyWheel.stop(Math.random() * data.length >> 0)
-            }, 3000)
         },
-        end(prize) {
-            alert(`恭喜你选中【${prize.title}】`)
+        methods: {
+            addItem() {
+                this.food_list.push('');
+            },
+            deleteItem(index) {
+                this.food_list.splice(index, 1);
+            },
+            save() {
+                this.getPrizesList();
+                this.dialogFormVisible = false;
+            },
+            getPrizesList() {
+                const prizes = []
+                this.food_list.forEach((item, index) => {
+                    prizes.push({
+                        title: item,
+                        background: index % 2 ? '#f9e3bb' : '#f8d384',
+                        fonts: [{text: item, top: '10%'}],
+                    })
+                })
+                this.prizes = prizes;
+            },
+            startCallBack() {
+                this.$refs.LuckyWheel.play();
+                setTimeout(() => {
+                    this.$refs.LuckyWheel.stop(Math.random() * this.food_list.length >> 0)
+                }, 3000)
+            },
+            endCallBack(prize) {
+                swal("Good job!", `恭喜你选中【${prize.title}】`, "success");
+            }
         },
-    })
+        created() {
+        },
+        mounted() {
+            this.getPrizesList();
+        }
+    });
 </script>
 </body>
+<style>
+    #app {
+        margin-top: 10%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        align-content: space-around;
+    }
+
+    .el-scrollbar__wrap {
+        overflow-x: hidden !important;
+    }
+</style>
 </html>
