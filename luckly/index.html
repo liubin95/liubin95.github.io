@@ -22,9 +22,9 @@
                 :prizes="prizes"
                 @end="endCallBack"
                 @start="startCallBack"
-                height="400px"
+                height="350px"
                 ref="LuckyWheel"
-                width="400px"
+                width="350px"
         />
     </div>
     <div>
@@ -36,8 +36,8 @@
         </el-button>
     </div>
 
-    <el-dialog :visible.sync="dialogFormVisible" center title="自定义选项" width="30%">
-        <el-scrollbar style="height:500px;">
+    <el-dialog :visible.sync="dialogFormVisible" center custom-class="customWidth" title="自定义选项" width="30%">
+        <el-scrollbar style="height:400px;">
             <div :key="index" style="width: 60%;margin:1% auto;" v-for="(item, index) in food_list">
                 <el-input placeholder="请输入内容" v-model="food_list[index]">
                     <template slot="append"><i @click="deleteItem(index)" class="el-icon-delete"></i></template>
@@ -130,6 +130,10 @@
 
     .el-scrollbar__wrap {
         overflow-x: hidden !important;
+    }
+
+    .customWidth {
+        min-width: 350px;
     }
 </style>
 </html>
