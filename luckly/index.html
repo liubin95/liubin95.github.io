@@ -37,10 +37,11 @@
     </div>
 
     <el-dialog :visible.sync="dialogFormVisible" center custom-class="customWidth" title="自定义选项" width="30%">
-        <el-scrollbar style="height:400px;">
+        <el-scrollbar ref="scrollMenuRef" style="height:400px;">
             <div :key="index" style="width: 60%;margin:1% auto;" v-for="(item, index) in food_list">
                 <el-input placeholder="请输入内容" v-model="food_list[index]">
                     <template slot="append"><i @click="deleteItem(index)" class="el-icon-delete"></i></template>
+                    <template slot="prepend">{{index + 1}}</template>
                 </el-input>
             </div>
         </el-scrollbar>
@@ -83,6 +84,7 @@
         methods: {
             addItem() {
                 this.food_list.push('');
+                this.$refs['scrollMenuRef'].wrap.scrollTop = this.$refs['scrollMenuRef'].wrap.scrollHeight;
             },
             deleteItem(index) {
                 this.food_list.splice(index, 1);
