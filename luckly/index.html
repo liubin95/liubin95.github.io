@@ -11,6 +11,7 @@
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue-luck-draw@3.4/dist/vue-luck-draw.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
 </head>
 <body style="background-image: url(./img/memphis-colorful.png);">
 <div id="app">
@@ -24,8 +25,7 @@
                 @start="startCallBack"
                 height="350px"
                 ref="LuckyWheel"
-                width="350px"
-        />
+                width="350px"></lucky-wheel>
     </div>
     <div>
         <br>
@@ -38,18 +38,24 @@
 
     <el-dialog :visible.sync="dialogFormVisible" center custom-class="customWidth" title="自定义选项" width="30%">
         <el-scrollbar ref="scrollMenuRef" style="height:400px;">
-            <div :key="index" style="width: 60%;margin:1% auto;" v-for="(item, index) in food_list">
-                <el-input placeholder="请输入内容" v-model="food_list[index]">
-                    <template slot="append"><i @click="deleteItem(index)" class="el-icon-delete"></i></template>
-                    <template slot="prepend">{{index + 1}}</template>
-                </el-input>
-            </div>
+            <transition-group name="list" tag="div">
+                <div :key="item.id"
+                     class="list-item"
+                     v-for="(item, index) in food_list">
+                    <el-input placeholder="请输入内容"
+                              v-model="food_list[index].name">
+                        <template slot="append"><i @click="deleteItem(index)" class="el-icon-delete"></i></template>
+                        <template slot="prepend">{{ index + 1 }}</template>
+                    </el-input>
+                </div>
+            </transition-group>
         </el-scrollbar>
         <div style="width: 60%;margin:1% auto;">
             <el-button @click="addItem()" icon="el-icon-plus" size="medium" style="width: 100%"></el-button>
         </div>
         <div class="dialog-footer" slot="footer">
             <el-button @click="dialogFormVisible = false">取 消</el-button>
+            <el-button @click="shuffle()">shuffle</el-button>
             <el-button @click="save()" type="primary">确 定</el-button>
         </div>
     </el-dialog>
@@ -61,7 +67,8 @@
         data() {
             return {
                 prizes: [],
-                food_list: ['焖面', '烤鸭', '盖饭', '驴肉火烧', '寿司', '熏肉大饼', '筋头巴脑', '万达的鸭货', '万达的鸭货'],
+                food_list_basic: ['焖面', '烤鸭', '盖饭', '驴肉火烧', '寿司', '熏肉大饼', '筋头巴脑', '万达的鸭货', '万达的鸭货'],
+                food_list: [],
                 defaultStyle: {
                     fontColor: '#d64737',
                     fontSize: '14px'
@@ -83,15 +90,22 @@
         },
         methods: {
             addItem() {
-                this.food_list.push('');
-                this.$refs['scrollMenuRef'].wrap.scrollTop = this.$refs['scrollMenuRef'].wrap.scrollHeight;
+                this.food_list.push({
+                    name: '',
+                    id: _.uniqueId()
+                });
+                this.$nextTick(() => {
+                    this.$refs['scrollMenuRef'].wrap.scrollTop = this.$refs['scrollMenuRef'].wrap.scrollHeight;
+                })
+            },
+            shuffle() {
+                this.food_list = _.shuffle(this.food_list);
             },
             deleteItem(index) {
                 this.food_list.splice(index, 1);
-                this.$refs['scrollMenuRef'].wrap.scrollTop = this.$refs['scrollMenuRef'].wrap.scrollHeight;
             },
             save() {
-                this.food_list = this.food_list.filter(item => item);
+                this.food_list = this.food_list.filter(item => item.name);
                 this.getPrizesList();
                 this.dialogFormVisible = false;
             },
@@ -99,9 +113,9 @@
                 const prizes = []
                 this.food_list.forEach((item, index) => {
                     prizes.push({
-                        title: item,
+                        title: item.name,
                         background: index % 2 ? '#f9e3bb' : '#f8d384',
-                        fonts: [{text: item, top: '10%'}],
+                        fonts: [{text: item.name, top: '10%'}],
                     })
                 })
                 this.prizes = prizes;
@@ -117,6 +131,12 @@
             }
         },
         created() {
+            this.food_list_basic.forEach(it => {
+                this.food_list.push({
+                    id: _.uniqueId(),
+                    name: it
+                });
+            })
         },
         mounted() {
             this.getPrizesList();
@@ -139,6 +159,21 @@
 
     .customWidth {
         min-width: 350px;
+    }
+
+    .list-item {
+        margin: 1% auto;
+        transition: all 0.5s;
+        width: 60%;
+    }
+
+    .list-enter, .list-leave-to {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    .list-leave-active {
+        position: absolute;
     }
 </style>
 </html>
