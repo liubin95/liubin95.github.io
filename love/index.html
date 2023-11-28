@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>love</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"
+            integrity="sha256-1rA678n2xEx7x4cTZ5x4wpUCj6kUMZEZ5cxLSVSFWxw=" crossorigin="anonymous"></script>
+    <style>
+
+    </style>
+</head>
+<body style="background-image: url(./img/memphis-colorful.png);">
+
+<main>
+    <div id="chart"></div>
+</main>
+<script type="text/javascript">
+    const margin = {top: 10, right: 10, bottom: 10, left: 10};
+    const heartSize = 100;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    let x, y;
+    const data = [];
+    for (let i = 0; i < 350; i++) {
+        t = i * 0.1;
+        x = 16 * Math.pow(Math.sin(t), 3);
+        y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)
+        data[i] = [x, y];
+    }//for i
+    console.log(data);
+    //Scales
+    const xScale = d3.scaleLinear()
+        .domain([d3.min(data, function (d) {
+            return d[0];
+        }), d3.max(data, function (d) {
+            return d[0];
+        })])
+        .range([0, heartSize]);
+
+    const yScale = d3.scaleLinear()
+        .domain([d3.min(data, function (d) {
+            return d[1];
+        }), d3.max(data, function (d) {
+            return d[1];
+        })])
+        .range([heartSize, 0]);
+
+
+    //Initiate the SVG
+    const svg = d3.select('#chart')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+    //Create and draw the path that connects the dots
+    //From: http://stackoverflow.com/questions/13893127/how-to-draw-a-path-smoothly-from-start-point-to-end-point-in-d3-js
+    const line = d3.line()
+        .x(function (d) {
+            return xScale(d[0])
+        })
+        .y(function (d) {
+            return yScale(d[1])
+        });
+
+    const path = svg.append("g").append("path").attr('fill', 'red')
+        .attr("d", line(data));
+
+    // 添加鼠标悬浮事件监听器
+    path.on("mouseover", function () {
+        d3.select(this)
+            .transition()
+            .attrTween("fill", () => d3.interpolateRgb("red", "pink"))
+            .duration(500) // 过渡时间
+            .attr("transform", `translate(${d3.randomUniform(width - heartSize)()},${d3.randomUniform(height - heartSize)()})`); // 移动到 的位置
+    });
+
+</script>
+</body>
+</html>
