@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>matter</title>
+    <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.js"></script>
+    <script src="./pathseg.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/poly-decomp@0.3.0/build/decomp.js"></script>
+</head>
+<body>
+<div id="main">
+</div>
+<svg display="none">
+    <g>
+        <path id="heart"
+              d="M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 z"></path>
+        <path id="start"
+              d="M 28,76 83,76 100,25 116,76 171,76 127,108 144,160 100,128 55,160 72,108 Z"
+        ></path>
+        <path id="circle" d="M50,50 m-40,0a40,40 0 1,0 80,0a40,40 0 1,0 -80,0"/>
+    </g>
+</svg>
+<script type="text/javascript">
+
+    // module aliases
+    const Engine = Matter.Engine,
+        Render = Matter.Render,
+        Runner = Matter.Runner,
+        Bodies = Matter.Bodies,
+        Svg = Matter.Svg,
+        Common = Matter.Common,
+        Mouse = Matter.Mouse,
+        Vertices = Matter.Vertices,
+        MouseConstraint = Matter.MouseConstraint,
+        Composite = Matter.Composite;
+    // 在 Common 对象上设置凹多边形分解库
+    // 先定义 polyDecomp
+    const polyDecomp = window.decomp;
+    Common.setDecomp(polyDecomp);
+
+    const width = window.innerWidth - 10,
+        height = window.innerHeight - 10;
+
+    function buildBorder() {
+        // 定位中心点
+        // x, y, width, height
+        const groundB = Bodies.rectangle(width / 2, height, width, 10, {
+            isStatic: true,
+            render: {
+                fillStyle: 'white',
+                strokeStyle: 'white',
+                lineWidth: 1
+            }
+        });
+        const groundL = Bodies.rectangle(10, height / 2, 10, height, {
+            isStatic: true,
+            render: {
+                fillStyle: 'white',
+                strokeStyle: 'white',
+                lineWidth: 1
+            }
+        });
+        const groundR = Bodies.rectangle(width - 10, height / 2, 10, height, {
+            isStatic: true,
+            render: {
+                fillStyle: 'white',
+                strokeStyle: 'white',
+                lineWidth: 1
+            }
+        });
+        return [groundB, groundL, groundR];
+    }
+
+    function buildRectangle(world) {
+        const colorArr = ['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#ececd1'];
+        const elementArr = [document.getElementById("heart"), document.getElementById("start"), document.getElementById("circle")];
+        const scaleArr = [0.5, 1, 1.5];
+        const xyArr = [[0.25 * width, 50], [0.5 * width, 50], [0.75 * width, 50]];
+        setInterval(() => {
+            let color = Common.choose(colorArr);
+            let scale = Common.choose(scaleArr);
+            let xy = Common.choose(xyArr);
+            let body = Bodies.fromVertices(xy[0], xy[1], Svg.pathToVertices(Common.choose(elementArr), 1), {
+                render: {
+                    fillStyle: color,
+                    strokeStyle: color,
+                    lineWidth: 1
+                }
+            }, true);
+            // 将物体的宽度和高度都缩小
+            Matter.Body.scale(body, scale, scale);
+            Matter.Composite.add(world, body);
+        }, 500)
+    }
+
+    // create an engine
+    const engine = Engine.create(),
+        world = engine.world;
+
+    // create a renderer
+    const render = Render.create({
+        element: document.body,
+        engine: engine,
+        options: {
+            background: './memphis-colorful.png',
+            width: width,
+            height: height,
+            wireframes: false, // 关闭线框显示
+        }
+    });
+
+    // run the renderer
+    Render.run(render);
+    // create runner
+    const runner = Runner.create();
+    // run the engine
+    Runner.run(runner, engine);
+
+
+    Composite.add(world, buildBorder());
+    // add all the bodies to the world
+    buildRectangle(world);
+
+
+    // add mouse control
+    var mouse = Mouse.create(render.canvas),
+        mouseConstraint = MouseConstraint.create(engine, {
+            mouse: mouse,
+            constraint: {
+                stiffness: 0.2,
+                render: {
+                    visible: false
+                }
+            }
+        });
+
+    Composite.add(world, mouseConstraint);
+    // keep the mouse in sync with rendering
+    render.mouse = mouse;
+</script>
+</body>
+</html>
