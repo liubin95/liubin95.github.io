@@ -8,8 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/poly-decomp@0.3.0/build/decomp.min.js"></script>
 </head>
 <body>
-<div id="main">
-</div>
+<button onclick="stop()">stop</button>
 <svg display="none">
     <g>
         <path id="heart"
@@ -32,19 +31,30 @@
         Mouse = Matter.Mouse,
         Vertices = Matter.Vertices,
         MouseConstraint = Matter.MouseConstraint,
-        Composite = Matter.Composite;
+        Composite = Matter.Composite,
+        Body = Matter.Body,
+        Events = Matter.Events;
     // 在 Common 对象上设置凹多边形分解库
-    // 先定义 polyDecomp
-    const polyDecomp = window.decomp;
-    Common.setDecomp(polyDecomp);
+    Common.setDecomp(window.decomp);
 
-    const width = window.innerWidth - 10,
-        height = window.innerHeight - 10;
+    const margin = 50;
+    const borderWith = 10;
+    const width = window.innerWidth - margin,
+        height = window.innerHeight - margin;
+    const colorArr = ['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#ececd1'];
+    const elementArr = [document.getElementById("heart"), document.getElementById("start"), document.getElementById("circle")];
+    const scaleArr = [0.5, 1, 1.5];
+    const xyArr = [[0.25 * width, 50], [0.5 * width, 50], [0.75 * width, 50]];
+    let timer = null;
+
+    function stop() {
+        clearInterval(timer);
+    }
 
     function buildBorder() {
         // 定位中心点
         // x, y, width, height
-        const groundB = Bodies.rectangle(width / 2, height, width, 10, {
+        const groundB = Bodies.rectangle(width / 2, height, width, borderWith, {
             isStatic: true,
             render: {
                 fillStyle: 'white',
@@ -52,7 +62,7 @@
                 lineWidth: 1
             }
         });
-        const groundL = Bodies.rectangle(10, height / 2, 10, height, {
+        const groundL = Bodies.rectangle(10, height / 2, borderWith, height, {
             isStatic: true,
             render: {
                 fillStyle: 'white',
@@ -60,7 +70,7 @@
                 lineWidth: 1
             }
         });
-        const groundR = Bodies.rectangle(width - 10, height / 2, 10, height, {
+        const groundR = Bodies.rectangle(width - 10, height / 2, borderWith, height, {
             isStatic: true,
             render: {
                 fillStyle: 'white',
@@ -72,14 +82,11 @@
     }
 
     function buildRectangle(world) {
-        const colorArr = ['#f19648', '#f5d259', '#f55a3c', '#063e7b', '#ececd1'];
-        const elementArr = [document.getElementById("heart"), document.getElementById("start"), document.getElementById("circle")];
-        const scaleArr = [0.5, 1, 1.5];
-        const xyArr = [[0.25 * width, 50], [0.5 * width, 50], [0.75 * width, 50]];
-        setInterval(() => {
+        timer = setInterval(() => {
             let color = Common.choose(colorArr);
             let scale = Common.choose(scaleArr);
             let xy = Common.choose(xyArr);
+
             let body = Bodies.fromVertices(xy[0], xy[1], Svg.pathToVertices(Common.choose(elementArr), 1), {
                 render: {
                     fillStyle: color,
@@ -88,9 +95,28 @@
                 }
             }, true);
             // 将物体的宽度和高度都缩小
-            Matter.Body.scale(body, scale, scale);
-            Matter.Composite.add(world, body);
-        }, 500)
+            Body.scale(body, scale, scale);
+            Composite.add(world, body);
+            console.log(world.bodies);
+        }, 1500)
+    }
+
+    function mouseControl(render, engine) {
+        // add mouse control
+        const mouse = Mouse.create(render.canvas),
+            mouseConstraint = MouseConstraint.create(engine, {
+                mouse: mouse,
+                constraint: {
+                    stiffness: 0.2,
+                    render: {
+                        visible: false
+                    }
+                }
+            });
+
+        Composite.add(engine.world, mouseConstraint);
+        // keep the mouse in sync with rendering
+        render.mouse = mouse;
     }
 
     // create an engine
@@ -116,27 +142,30 @@
     // run the engine
     Runner.run(runner, engine);
 
-
-    Composite.add(world, buildBorder());
     // add all the bodies to the world
+    Composite.add(world, buildBorder());
     buildRectangle(world);
+    mouseControl(render, engine);
 
-
-    // add mouse control
-    var mouse = Mouse.create(render.canvas),
-        mouseConstraint = MouseConstraint.create(engine, {
-            mouse: mouse,
-            constraint: {
-                stiffness: 0.2,
-                render: {
-                    visible: false
-                }
+    // collisionStart 碰撞开始事件
+    Events.on(engine, 'collisionEnd', event => {
+        // event.pairs 是碰撞对的数组
+        const pairs = event.pairs;
+        for (const item of pairs) {
+            if (item.bodyA.isStatic || item.bodyB.isStatic) {
+                continue;
             }
-        });
+            // 碰撞的物体  碰撞的点
+            // if (item.bodyA.render.fillStyle   === item.bodyB.render.fillStyle) {
+            console.log('fillStyle', item.bodyA.id, item.bodyB.id);
+            console.log(event.source.world);
+            Composite.remove(event.source.world, Composite.get(event.source.world, item.bodyA.id, 'body'));
+            Composite.remove(event.source.world, Composite.get(event.source.world, item.bodyB.id, 'body'));
 
-    Composite.add(world, mouseConstraint);
-    // keep the mouse in sync with rendering
-    render.mouse = mouse;
+            // }
+        }
+    });
+
 </script>
 </body>
 </html>

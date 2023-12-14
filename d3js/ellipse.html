@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>ellipse</title>
+</head>
+<body>
+<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg" id="my-svg">
+    <!-- 定义圆的参数 -->
+    <ellipse cx="200" cy="200" rx="150" ry="100" fill="none" stroke="black" stroke-width="2"/>
+    <circle r="2" cx="200" cy="200" fill="red"/>
+    <line x1="200" y1="200" x2="200" y2="300" stroke="black"/>
+    <line x1="200" y1="200" x2="50" y2="200" stroke="black"/>
+</svg>
+</body>
+<script type="module">
+    import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+    let [cx, cy, rx, ry] = [200, 200, 150, 100];
+
+    // 焦距（f） = sqrt(a^2 - b^2)
+    let f = Math.sqrt(Math.abs(Math.pow(rx, 2) - Math.pow(ry, 2)));
+    console.log(f);
+    // 离心率
+    let e = f / rx;
+    console.log(e);
+
+    // 焦点坐标
+    let f1 = [cx - f, cy];
+    let f2 = [cx + f, cy];
+    d3.select("#my-svg").append("circle")
+        .attr("cx", f1[0])
+        .attr("cy", f1[1])
+        .attr("r", 2)
+        .attr("fill", "red");
+    d3.select("#my-svg").append("circle")
+        .attr("cx", f2[0])
+        .attr("cy", f2[1])
+        .attr("r", 2)
+        .attr("fill", "red");
+
+    //r(θ) = a * b / sqrt((b * cos(θ))^2 + (a * sin(θ))^2)
+    // 角度
+    let angle = [Math.PI * 5 / 4, Math.PI * 7 / 4];
+    let points = [];
+    for (let i = 0; i < angle.length; i++) {
+        let item = angle[i];
+        let r = rx * ry / Math.sqrt(Math.pow(ry * Math.cos(item), 2) + Math.pow(rx * Math.sin(item), 2));
+        console.log(r);
+        // 转换为 笛卡尔坐标系
+        let x = cx + r * Math.cos(item);
+        let y = cy - r * Math.sin(item);
+        console.log(x, y);
+        points.push([x, y]);
+        d3.select("#my-svg").append("circle")
+            .attr("cx", x)
+            .attr("cy", y)
+            .attr("r", 2)
+            .attr("fill", "red");
+    }
+    let m = `M ${points[0][0]} ${points[0][1]} `;
+    let a = `A ${rx} ${ry} 0 1 1 ${points[1][0]} ${points[1][1]}`;
+    d3.select("#my-svg").append("path")
+        .attr("d", m + a)
+        .attr("fill", "none")
+        .attr("id", "my-path")
+        .attr("stroke", "yellow")
+        .attr("stroke-width", 2);
+
+    // 画一个文字
+    // 椭圆周长
+    let perimeter = 2 * Math.PI * Math.sqrt((Math.pow(rx, 2) + Math.pow(ry, 2)) / 2);
+    console.log(perimeter);
+    d3.select("#my-svg").append("text")
+        .style("font-family", "Verdana")
+        .style("font-size", "14")
+        .style("fill", "red")
+        .append("textPath")
+        .attr("xlink:href", "#my-path")
+        .attr("lengthAdjust", "spacing")
+        .attr("textLength", perimeter * 0.75)
+        .text("1 2 3 4 5 6 7 8 9 10 11 12 13 14");
+
+    let l = `L ${points[1][0]} ${points[1][1]} `;
+    d3.select("#my-svg").append("path")
+        .attr("d", m + l)
+        .attr("fill", "none")
+        .attr("id", "my-line-path")
+        .attr("stroke", "yellow")
+        .attr("stroke-width", 2);
+
+    d3.select("#my-svg").append("text")
+        .style("font-family", "Verdana")
+        .style("font-size", "14")
+        .style("fill", "red")
+        .append("textPath")
+        .attr("xlink:href", "#my-line-path")
+        .attr("lengthAdjust", "spacing")
+        .attr("textLength", points[1][0] - points[0][0])
+        .text("1 2 3 4 5 6");
+</script>
+</html>
